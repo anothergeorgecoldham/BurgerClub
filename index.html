@@ -1,0 +1,1115 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Burger Club Planner</title>
+  <script>
+    (() => {
+      const param = new URLSearchParams(window.location.search).get("clawpilotTheme");
+      const theme =
+        param || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      document.documentElement.setAttribute("data-theme", theme);
+    })();
+  </script>
+  <style>
+    :root {
+      color-scheme: light;
+      --cp-bg: #f7f4ef;
+      --cp-bg-elevated: #fcfbf8;
+      --cp-surface: #ffffff;
+      --cp-surface-soft: #f5f5f5;
+      --cp-border: #dedede;
+      --cp-border-strong: #919191;
+      --cp-text: #242424;
+      --cp-text-muted: #5c5c5c;
+      --cp-text-soft: #6f6f6f;
+      --cp-accent: #b11f4b;
+      --cp-accent-hover: #9a1a41;
+      --cp-accent-soft: rgba(177, 31, 75, 0.08);
+      --cp-accent-fg: #ffffff;
+      --cp-success: #16a34a;
+      --cp-danger: #dc2626;
+      --cp-warning: #f59e0b;
+      --cp-link: #0078d4;
+      --cp-shadow: 0 18px 48px rgba(0, 0, 0, 0.12);
+      --cp-overlay: rgba(255, 255, 255, 0.8);
+      --cp-panel: rgba(255, 255, 255, 0.86);
+      --cp-panel-strong: rgba(255, 255, 255, 0.96);
+      --cp-sheen: rgba(255, 255, 255, 0.55);
+      --cp-highlight: rgba(177, 31, 75, 0.12);
+    }
+    html[data-theme="dark"] {
+      color-scheme: dark;
+      --cp-bg: #3d3b3a;
+      --cp-bg-elevated: #343231;
+      --cp-surface: #292929;
+      --cp-surface-soft: #2e2e2e;
+      --cp-border: #474747;
+      --cp-border-strong: #5f5f5f;
+      --cp-text: #dedede;
+      --cp-text-muted: #919191;
+      --cp-text-soft: #b0b0b0;
+      --cp-accent: #fd8ea1;
+      --cp-accent-hover: #fb7b91;
+      --cp-accent-soft: rgba(253, 142, 161, 0.14);
+      --cp-accent-fg: #1a1a1a;
+      --cp-success: #4ade80;
+      --cp-danger: #f87171;
+      --cp-warning: #fbbf24;
+      --cp-link: #4da6ff;
+      --cp-shadow: 0 18px 48px rgba(0, 0, 0, 0.32);
+      --cp-overlay: rgba(41, 41, 41, 0.88);
+      --cp-panel: rgba(41, 41, 41, 0.72);
+      --cp-panel-strong: rgba(41, 41, 41, 0.96);
+      --cp-sheen: rgba(255, 255, 255, 0.04);
+      --cp-highlight: rgba(253, 142, 161, 0.12);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--cp-bg);
+      color: var(--cp-text);
+      font-family: "Segoe UI", Aptos, Calibri, -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    button,
+    input,
+    select,
+    textarea {
+      font: inherit;
+    }
+
+    .shell {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 32px 0;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 1.25fr 0.75fr;
+      gap: 20px;
+      align-items: stretch;
+      margin-bottom: 20px;
+    }
+
+    .card {
+      background: var(--cp-surface);
+      border: 1px solid var(--cp-border);
+      border-radius: 16px;
+      box-shadow: 0 0 2px var(--cp-border), 0 1px 2px var(--cp-border);
+    }
+
+    .hero-main,
+    .hero-side,
+    .panel {
+      padding: 24px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0 0 12px;
+      color: var(--cp-accent);
+      font-size: 0.86rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    h1,
+    h2,
+    h3,
+    p {
+      margin-top: 0;
+    }
+
+    h1 {
+      margin-bottom: 12px;
+      font-size: clamp(2.1rem, 4vw, 4.2rem);
+      line-height: 0.96;
+      letter-spacing: -0.06em;
+    }
+
+    h2 {
+      margin-bottom: 8px;
+      font-size: 1.45rem;
+      letter-spacing: -0.03em;
+    }
+
+    h3 {
+      margin-bottom: 6px;
+      font-size: 1rem;
+    }
+
+    .lede,
+    .muted {
+      color: var(--cp-text-muted);
+    }
+
+    .lede {
+      max-width: 720px;
+      margin-bottom: 20px;
+      font-size: 1.05rem;
+      line-height: 1.6;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+
+    .stat {
+      padding: 14px;
+      background: var(--cp-surface-soft);
+      border: 1px solid var(--cp-border);
+      border-radius: 0.625rem;
+    }
+
+    .stat strong {
+      display: block;
+      margin-bottom: 2px;
+      font-size: 1.5rem;
+    }
+
+    .stat span {
+      color: var(--cp-text-muted);
+      font-size: 0.9rem;
+    }
+
+    .hero-side {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 16px;
+      background: var(--cp-accent-soft);
+    }
+
+    .stage-nav {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      padding: 8px;
+      background: var(--cp-surface);
+      border: 1px solid var(--cp-border);
+      border-radius: 16px;
+      margin-bottom: 20px;
+      position: sticky;
+      top: 12px;
+      z-index: 3;
+    }
+
+    .stage-btn,
+    .btn,
+    .ghost-btn,
+    .danger-btn {
+      min-height: 42px;
+      border: 1px solid var(--cp-border);
+      border-radius: 0.625rem;
+      cursor: pointer;
+      transition: background 140ms ease, border-color 140ms ease, transform 140ms ease;
+    }
+
+    .stage-btn {
+      background: var(--cp-surface-soft);
+      color: var(--cp-text-muted);
+      font-weight: 700;
+    }
+
+    .stage-btn.active,
+    .btn {
+      background: var(--cp-accent);
+      border-color: var(--cp-accent);
+      color: var(--cp-accent-fg);
+    }
+
+    .stage-btn:hover,
+    .btn:hover,
+    .ghost-btn:hover,
+    .danger-btn:hover {
+      transform: translateY(-1px);
+    }
+
+    .btn:hover {
+      background: var(--cp-accent-hover);
+      border-color: var(--cp-accent-hover);
+    }
+
+    .ghost-btn {
+      background: var(--cp-surface);
+      color: var(--cp-text);
+    }
+
+    .danger-btn {
+      background: var(--cp-surface);
+      color: var(--cp-danger);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+      gap: 20px;
+      align-items: start;
+    }
+
+    .stage {
+      display: none;
+    }
+
+    .stage.active {
+      display: block;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .field.full {
+      grid-column: 1 / -1;
+    }
+
+    label {
+      color: var(--cp-text-muted);
+      font-size: 0.9rem;
+      font-weight: 700;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      padding: 11px 12px;
+      background: var(--cp-surface);
+      color: var(--cp-text);
+      border: 1px solid var(--cp-border);
+      border-radius: 0.625rem;
+      outline: none;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      border-color: var(--cp-accent);
+      box-shadow: 0 0 0 3px var(--cp-accent-soft);
+    }
+
+    textarea {
+      min-height: 76px;
+      resize: vertical;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      margin-top: 16px;
+    }
+
+    .address-box {
+      position: relative;
+    }
+
+    .suggestions {
+      display: none;
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: calc(100% + 6px);
+      max-height: 260px;
+      overflow: auto;
+      background: var(--cp-panel-strong);
+      border: 1px solid var(--cp-border);
+      border-radius: 0.625rem;
+      box-shadow: var(--cp-shadow);
+      z-index: 8;
+    }
+
+    .suggestions.visible {
+      display: block;
+    }
+
+    .suggestion {
+      width: 100%;
+      padding: 12px;
+      background: var(--cp-surface);
+      color: var(--cp-text);
+      border: 0;
+      border-bottom: 1px solid var(--cp-border);
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .suggestion:last-child {
+      border-bottom: 0;
+    }
+
+    .suggestion:hover {
+      background: var(--cp-accent-soft);
+    }
+
+    .list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .friend,
+    .event,
+    .empty,
+    .summary-row {
+      padding: 16px;
+      background: var(--cp-surface-soft);
+      border: 1px solid var(--cp-border);
+      border-radius: 0.625rem;
+    }
+
+    .friend-head,
+    .event-head,
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: flex-start;
+    }
+
+    .pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      background: var(--cp-accent-soft);
+      color: var(--cp-text);
+      border: 1px solid var(--cp-border);
+      border-radius: 999px;
+      font-size: 0.86rem;
+      font-weight: 700;
+    }
+
+    .address {
+      color: var(--cp-text-muted);
+      line-height: 1.5;
+    }
+
+    .event {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 14px;
+    }
+
+    .date-chip {
+      min-width: 72px;
+      padding: 10px;
+      background: var(--cp-surface);
+      border: 1px solid var(--cp-border);
+      border-radius: 0.625rem;
+      text-align: center;
+    }
+
+    .date-chip strong {
+      display: block;
+      font-size: 1.6rem;
+      line-height: 1;
+    }
+
+    .date-chip span {
+      display: block;
+      color: var(--cp-text-muted);
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+    }
+
+    .notice {
+      padding: 12px;
+      background: var(--cp-accent-soft);
+      border: 1px solid var(--cp-border);
+      border-radius: 0.625rem;
+      color: var(--cp-text-muted);
+      line-height: 1.5;
+    }
+
+    .table-wrap {
+      overflow: auto;
+      border: 1px solid var(--cp-border);
+      border-radius: 0.625rem;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 520px;
+    }
+
+    th,
+    td {
+      padding: 12px;
+      border-bottom: 1px solid var(--cp-border);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      color: var(--cp-text-muted);
+      background: var(--cp-surface-soft);
+      font-size: 0.85rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .toast {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      max-width: 360px;
+      padding: 12px 14px;
+      background: var(--cp-panel-strong);
+      color: var(--cp-text);
+      border: 1px solid var(--cp-border);
+      border-radius: 0.625rem;
+      box-shadow: var(--cp-shadow);
+      transform: translateY(24px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 160ms ease, transform 160ms ease;
+      z-index: 20;
+    }
+
+    .toast.visible {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    .small {
+      color: var(--cp-text-soft);
+      font-size: 0.88rem;
+      line-height: 1.45;
+    }
+
+    .hidden-file {
+      display: none;
+    }
+
+    @media (max-width: 860px) {
+      .hero,
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      .stage-nav,
+      .stats,
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .event {
+        grid-template-columns: 1fr;
+      }
+
+      .friend-head,
+      .event-head,
+      .summary-row {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <section class="hero">
+      <div class="hero-main card">
+        <p class="eyebrow">Burger Club</p>
+        <h1>Plan the monthly burger catchup without the group-chat chaos.</h1>
+        <p class="lede">Friends opt in with their preferred day, meal time, and one burger joint. The planner turns everyone’s preferences into upcoming monthly catchups and rotates through suggested venues.</p>
+        <div class="stats" aria-label="Burger club summary">
+          <div class="stat">
+            <strong id="statFriends">0</strong>
+            <span>friends opted in</span>
+          </div>
+          <div class="stat">
+            <strong id="statVenue">None</strong>
+            <span>next venue</span>
+          </div>
+          <div class="stat">
+            <strong id="statDate">TBD</strong>
+            <span>next catchup</span>
+          </div>
+        </div>
+      </div>
+      <aside class="hero-side card">
+        <div>
+          <p class="eyebrow">How it works</p>
+          <p class="muted">Stage 1 collects opt-ins. Stage 2 chooses the most popular day and meal time, then schedules one catchup per month using each person’s burger joint suggestion in rotation.</p>
+        </div>
+        <p class="small">Address lookup uses the free OpenStreetMap Nominatim search. You can also type an address manually if lookup is unavailable.</p>
+      </aside>
+    </section>
+
+    <nav class="stage-nav" aria-label="Planner stages">
+      <button class="stage-btn active" type="button" data-stage-target="optin">1. Opt in</button>
+      <button class="stage-btn" type="button" data-stage-target="schedule">2. Upcoming catchups</button>
+    </nav>
+
+    <section id="stage-optin" class="stage active">
+      <div class="grid">
+        <form id="optInForm" class="panel card" autocomplete="off">
+          <p class="eyebrow">Stage 1</p>
+          <h2>Opt in and suggest a burger joint</h2>
+          <p class="muted">Each friend gets one current preference and one suggested venue. Re-enter the same name to update that person.</p>
+
+          <div class="form-grid">
+            <div class="field">
+              <label for="friendName">Your name</label>
+              <input id="friendName" name="friendName" required placeholder="Sam">
+            </div>
+            <div class="field">
+              <label for="dayPreference">Preferred day</label>
+              <select id="dayPreference" name="dayPreference" required>
+                <option value="Sunday">Sunday</option>
+                <option value="Monday">Monday</option>
+                <option value="Tuesday">Tuesday</option>
+                <option value="Wednesday">Wednesday</option>
+                <option value="Thursday">Thursday</option>
+                <option value="Friday" selected>Friday</option>
+                <option value="Saturday">Saturday</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="mealPreference">Lunch or dinner</label>
+              <select id="mealPreference" name="mealPreference" required>
+                <option value="Lunch">Lunch</option>
+                <option value="Dinner" selected>Dinner</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="jointName">Burger joint</label>
+              <input id="jointName" name="jointName" required placeholder="Betty's Burgers">
+            </div>
+            <div class="field full address-box">
+              <label for="addressSearch">Address lookup</label>
+              <input id="addressSearch" name="addressSearch" required placeholder="Start typing an address or venue suburb">
+              <div id="addressSuggestions" class="suggestions" role="listbox" aria-label="Address suggestions"></div>
+            </div>
+            <div class="field full">
+              <label for="notes">Notes</label>
+              <textarea id="notes" name="notes" placeholder="Optional: parking, booking tips, best burger, dietary notes"></textarea>
+            </div>
+          </div>
+
+          <div class="actions">
+            <button class="btn" type="submit">Save opt-in</button>
+            <button class="ghost-btn" id="clearFormBtn" type="button">Clear form</button>
+          </div>
+        </form>
+
+        <section class="panel card">
+          <p class="eyebrow">Current crew</p>
+          <h2>Opted-in friends</h2>
+          <div id="friendList" class="list"></div>
+          <div class="actions">
+            <button class="ghost-btn" id="exportBtn" type="button">Export club data</button>
+            <button class="ghost-btn" id="importBtn" type="button">Import club data</button>
+            <button class="danger-btn" id="resetBtn" type="button">Reset all</button>
+            <input class="hidden-file" id="importFile" type="file" accept="application/json">
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <section id="stage-schedule" class="stage">
+      <div class="grid">
+        <section class="panel card">
+          <p class="eyebrow">Stage 2</p>
+          <h2>Upcoming monthly catchups</h2>
+          <p class="muted">Dates are based on the most popular opted-in day and meal time. Venues rotate through the suggested burger joints.</p>
+          <div id="scheduleList" class="list"></div>
+        </section>
+
+        <aside class="panel card">
+          <p class="eyebrow">Planning snapshot</p>
+          <h2>Group preferences</h2>
+          <div id="preferenceSummary" class="list"></div>
+          <h3>Venue rotation</h3>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Suggested by</th>
+                  <th>Burger joint</th>
+                  <th>Address</th>
+                </tr>
+              </thead>
+              <tbody id="venueTable"></tbody>
+            </table>
+          </div>
+        </aside>
+      </div>
+    </section>
+  </main>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    const STORAGE_KEY = "burgerClubPlanner.v1";
+    const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    const state = {
+      friends: loadFriends()
+    };
+
+    const els = {
+      optInForm: document.querySelector("#optInForm"),
+      friendName: document.querySelector("#friendName"),
+      dayPreference: document.querySelector("#dayPreference"),
+      mealPreference: document.querySelector("#mealPreference"),
+      jointName: document.querySelector("#jointName"),
+      addressSearch: document.querySelector("#addressSearch"),
+      addressSuggestions: document.querySelector("#addressSuggestions"),
+      notes: document.querySelector("#notes"),
+      clearFormBtn: document.querySelector("#clearFormBtn"),
+      friendList: document.querySelector("#friendList"),
+      scheduleList: document.querySelector("#scheduleList"),
+      preferenceSummary: document.querySelector("#preferenceSummary"),
+      venueTable: document.querySelector("#venueTable"),
+      exportBtn: document.querySelector("#exportBtn"),
+      importBtn: document.querySelector("#importBtn"),
+      importFile: document.querySelector("#importFile"),
+      resetBtn: document.querySelector("#resetBtn"),
+      toast: document.querySelector("#toast"),
+      statFriends: document.querySelector("#statFriends"),
+      statVenue: document.querySelector("#statVenue"),
+      statDate: document.querySelector("#statDate")
+    };
+
+    let addressLookupTimer = 0;
+    let selectedAddress = "";
+
+    document.querySelectorAll("[data-stage-target]").forEach((button) => {
+      button.addEventListener("click", () => setStage(button.dataset.stageTarget));
+    });
+
+    els.optInForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const friend = {
+        id: slugify(els.friendName.value),
+        name: clean(els.friendName.value),
+        day: els.dayPreference.value,
+        meal: els.mealPreference.value,
+        joint: clean(els.jointName.value),
+        address: clean(selectedAddress || els.addressSearch.value),
+        notes: clean(els.notes.value),
+        updatedAt: new Date().toISOString()
+      };
+
+      if (!friend.name || !friend.joint || !friend.address) {
+        showToast("Please add your name, burger joint, and address.");
+        return;
+      }
+
+      const existingIndex = state.friends.findIndex((item) => item.id === friend.id);
+      if (existingIndex >= 0) {
+        state.friends[existingIndex] = friend;
+        showToast(`${friend.name}'s opt-in was updated.`);
+      } else {
+        state.friends.push(friend);
+        showToast(`${friend.name} opted in.`);
+      }
+
+      saveFriends();
+      clearForm();
+      render();
+    });
+
+    els.clearFormBtn.addEventListener("click", clearForm);
+
+    els.addressSearch.addEventListener("input", () => {
+      selectedAddress = "";
+      window.clearTimeout(addressLookupTimer);
+      const query = els.addressSearch.value.trim();
+      if (query.length < 4) {
+        hideSuggestions();
+        return;
+      }
+      addressLookupTimer = window.setTimeout(() => searchAddresses(query), 420);
+    });
+
+    document.addEventListener("click", (event) => {
+      if (!els.addressSuggestions.contains(event.target) && event.target !== els.addressSearch) {
+        hideSuggestions();
+      }
+    });
+
+    els.exportBtn.addEventListener("click", () => {
+      const data = JSON.stringify({ exportedAt: new Date().toISOString(), friends: state.friends }, null, 2);
+      const blob = new Blob([data], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = "burger-club-data.json";
+      anchor.click();
+      URL.revokeObjectURL(url);
+      showToast("Club data exported.");
+    });
+
+    els.importBtn.addEventListener("click", () => els.importFile.click());
+
+    els.importFile.addEventListener("change", async () => {
+      const file = els.importFile.files[0];
+      if (!file) return;
+
+      try {
+        const payload = JSON.parse(await file.text());
+        if (!Array.isArray(payload.friends)) {
+          throw new Error("Import file does not include a friends array.");
+        }
+        state.friends = payload.friends
+          .filter((friend) => friend && friend.name && friend.joint && friend.address)
+          .map((friend) => ({
+            id: slugify(friend.name),
+            name: clean(friend.name),
+            day: days.includes(friend.day) ? friend.day : "Friday",
+            meal: friend.meal === "Lunch" ? "Lunch" : "Dinner",
+            joint: clean(friend.joint),
+            address: clean(friend.address),
+            notes: clean(friend.notes || ""),
+            updatedAt: friend.updatedAt || new Date().toISOString()
+          }));
+        saveFriends();
+        render();
+        showToast("Club data imported.");
+      } catch (error) {
+        showToast(error.message);
+      } finally {
+        els.importFile.value = "";
+      }
+    });
+
+    els.resetBtn.addEventListener("click", () => {
+      if (!window.confirm("Reset all Burger Club opt-ins on this device?")) return;
+      state.friends = [];
+      saveFriends();
+      render();
+      showToast("Burger Club data reset.");
+    });
+
+    function setStage(stageName) {
+      document.querySelectorAll("[data-stage-target]").forEach((button) => {
+        button.classList.toggle("active", button.dataset.stageTarget === stageName);
+      });
+      document.querySelectorAll(".stage").forEach((stage) => {
+        stage.classList.toggle("active", stage.id === `stage-${stageName}`);
+      });
+    }
+
+    async function searchAddresses(query) {
+      const url = new URL("https://nominatim.openstreetmap.org/search");
+      url.searchParams.set("format", "jsonv2");
+      url.searchParams.set("limit", "5");
+      url.searchParams.set("addressdetails", "1");
+      url.searchParams.set("q", query);
+
+      try {
+        const response = await fetch(url.toString(), {
+          headers: { "Accept": "application/json" }
+        });
+        if (!response.ok) {
+          throw new Error("Address lookup is unavailable right now.");
+        }
+        const results = await response.json();
+        renderAddressSuggestions(results);
+      } catch (error) {
+        els.addressSuggestions.innerHTML = `<div class="suggestion">${escapeHtml(error.message)} You can still type the address manually.</div>`;
+        els.addressSuggestions.classList.add("visible");
+      }
+    }
+
+    function renderAddressSuggestions(results) {
+      if (!results.length) {
+        els.addressSuggestions.innerHTML = `<div class="suggestion">No matches found. Type the address manually if needed.</div>`;
+        els.addressSuggestions.classList.add("visible");
+        return;
+      }
+
+      els.addressSuggestions.innerHTML = results.map((result, index) => {
+        const address = escapeHtml(result.display_name);
+        return `<button class="suggestion" type="button" data-address-index="${index}">${address}</button>`;
+      }).join("");
+
+      els.addressSuggestions.querySelectorAll("[data-address-index]").forEach((button) => {
+        button.addEventListener("click", () => {
+          selectedAddress = results[Number(button.dataset.addressIndex)].display_name;
+          els.addressSearch.value = selectedAddress;
+          hideSuggestions();
+        });
+      });
+
+      els.addressSuggestions.classList.add("visible");
+    }
+
+    function hideSuggestions() {
+      els.addressSuggestions.classList.remove("visible");
+      els.addressSuggestions.innerHTML = "";
+    }
+
+    function render() {
+      const sortedFriends = [...state.friends].sort((a, b) => a.name.localeCompare(b.name));
+      renderFriends(sortedFriends);
+      renderSchedule();
+      renderSummary();
+      renderStats();
+    }
+
+    function renderFriends(sortedFriends) {
+      if (!sortedFriends.length) {
+        els.friendList.innerHTML = `<div class="empty">No one has opted in yet. Add the first burger-loving friend.</div>`;
+        return;
+      }
+
+      els.friendList.innerHTML = sortedFriends.map((friend) => `
+        <article class="friend">
+          <div class="friend-head">
+            <div>
+              <h3>${escapeHtml(friend.name)}</h3>
+              <p class="address">${escapeHtml(friend.joint)}<br>${escapeHtml(friend.address)}</p>
+            </div>
+            <button class="ghost-btn" type="button" data-edit="${escapeHtml(friend.id)}">Edit</button>
+          </div>
+          <div class="pill-row">
+            <span class="pill">${escapeHtml(friend.day)}</span>
+            <span class="pill">${escapeHtml(friend.meal)}</span>
+          </div>
+          ${friend.notes ? `<p class="small">${escapeHtml(friend.notes)}</p>` : ""}
+        </article>
+      `).join("");
+
+      els.friendList.querySelectorAll("[data-edit]").forEach((button) => {
+        button.addEventListener("click", () => editFriend(button.dataset.edit));
+      });
+    }
+
+    function renderSchedule() {
+      const events = buildSchedule();
+      if (!events.length) {
+        els.scheduleList.innerHTML = `<div class="empty">Add at least one opted-in friend to create the monthly catchup schedule.</div>`;
+        return;
+      }
+
+      els.scheduleList.innerHTML = events.map((event) => `
+        <article class="event">
+          <div class="date-chip">
+            <span>${event.month}</span>
+            <strong>${event.dayOfMonth}</strong>
+            <span>${event.weekday}</span>
+          </div>
+          <div>
+            <div class="event-head">
+              <div>
+                <h3>${escapeHtml(event.venue.joint)}</h3>
+                <p class="address">${escapeHtml(event.venue.address)}</p>
+              </div>
+              <span class="pill">${escapeHtml(event.meal)}</span>
+            </div>
+            <p class="small">Suggested by ${escapeHtml(event.venue.name)}. ${event.venue.notes ? escapeHtml(event.venue.notes) : "Make a booking once the group confirms."}</p>
+          </div>
+        </article>
+      `).join("");
+    }
+
+    function renderSummary() {
+      const preferredDay = chooseMostCommon(state.friends.map((friend) => friend.day), days);
+      const preferredMeal = chooseMostCommon(state.friends.map((friend) => friend.meal), ["Dinner", "Lunch"]);
+      const dayCounts = countValues(state.friends.map((friend) => friend.day));
+      const mealCounts = countValues(state.friends.map((friend) => friend.meal));
+
+      if (!state.friends.length) {
+        els.preferenceSummary.innerHTML = `<div class="empty">Preference summary appears after friends opt in.</div>`;
+        els.venueTable.innerHTML = `<tr><td colspan="3">No venues yet.</td></tr>`;
+        return;
+      }
+
+      els.preferenceSummary.innerHTML = `
+        <div class="summary-row">
+          <div>
+            <h3>Chosen catchup slot</h3>
+            <p class="muted">${escapeHtml(preferredDay)} ${escapeHtml(preferredMeal.toLowerCase())}</p>
+          </div>
+          <span class="pill">${state.friends.length} votes</span>
+        </div>
+        <div class="notice">
+          Day votes: ${formatCounts(dayCounts)}<br>
+          Meal votes: ${formatCounts(mealCounts)}
+        </div>
+      `;
+
+      els.venueTable.innerHTML = state.friends.map((friend) => `
+        <tr>
+          <td>${escapeHtml(friend.name)}</td>
+          <td>${escapeHtml(friend.joint)}</td>
+          <td>${escapeHtml(friend.address)}</td>
+        </tr>
+      `).join("");
+    }
+
+    function renderStats() {
+      const events = buildSchedule();
+      els.statFriends.textContent = state.friends.length;
+      els.statVenue.textContent = events[0] ? events[0].venue.joint : "None";
+      els.statDate.textContent = events[0] ? `${events[0].dayOfMonth} ${events[0].month}` : "TBD";
+    }
+
+    function buildSchedule() {
+      if (!state.friends.length) return [];
+
+      const preferredDay = chooseMostCommon(state.friends.map((friend) => friend.day), days);
+      const preferredMeal = chooseMostCommon(state.friends.map((friend) => friend.meal), ["Dinner", "Lunch"]);
+      const targetDay = days.indexOf(preferredDay);
+      const today = startOfDay(new Date());
+      const venues = [...state.friends].sort((a, b) => a.updatedAt.localeCompare(b.updatedAt));
+      const events = [];
+      let monthCursor = new Date(today.getFullYear(), today.getMonth(), 1);
+
+      while (events.length < 6) {
+        const date = firstWeekdayOfMonth(monthCursor.getFullYear(), monthCursor.getMonth(), targetDay);
+        if (date >= today) {
+          const venue = venues[events.length % venues.length];
+          events.push({
+            date,
+            venue,
+            meal: preferredMeal,
+            month: date.toLocaleString(undefined, { month: "short" }),
+            dayOfMonth: date.getDate(),
+            weekday: date.toLocaleString(undefined, { weekday: "short" })
+          });
+        }
+        monthCursor = new Date(monthCursor.getFullYear(), monthCursor.getMonth() + 1, 1);
+      }
+
+      return events;
+    }
+
+    function firstWeekdayOfMonth(year, month, targetDay) {
+      const date = new Date(year, month, 1);
+      const offset = (targetDay - date.getDay() + 7) % 7;
+      date.setDate(1 + offset);
+      return startOfDay(date);
+    }
+
+    function chooseMostCommon(values, tieBreaker) {
+      if (!values.length) return tieBreaker[0];
+      const counts = countValues(values);
+      return Object.entries(counts).sort((a, b) => {
+        if (b[1] !== a[1]) return b[1] - a[1];
+        return tieBreaker.indexOf(a[0]) - tieBreaker.indexOf(b[0]);
+      })[0][0];
+    }
+
+    function countValues(values) {
+      return values.reduce((counts, value) => {
+        counts[value] = (counts[value] || 0) + 1;
+        return counts;
+      }, {});
+    }
+
+    function formatCounts(counts) {
+      return Object.entries(counts)
+        .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+        .map(([name, count]) => `${escapeHtml(name)} ${count}`)
+        .join(", ");
+    }
+
+    function editFriend(friendId) {
+      const friend = state.friends.find((item) => item.id === friendId);
+      if (!friend) return;
+      els.friendName.value = friend.name;
+      els.dayPreference.value = friend.day;
+      els.mealPreference.value = friend.meal;
+      els.jointName.value = friend.joint;
+      els.addressSearch.value = friend.address;
+      els.notes.value = friend.notes || "";
+      selectedAddress = friend.address;
+      setStage("optin");
+      els.friendName.focus();
+    }
+
+    function clearForm() {
+      els.optInForm.reset();
+      els.dayPreference.value = "Friday";
+      els.mealPreference.value = "Dinner";
+      selectedAddress = "";
+      hideSuggestions();
+    }
+
+    function loadFriends() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+        return Array.isArray(saved) ? saved : [];
+      } catch (error) {
+        console.warn("Burger Club saved data could not be loaded.", error);
+        return [];
+      }
+    }
+
+    function saveFriends() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state.friends));
+    }
+
+    function slugify(value) {
+      return clean(value).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+    }
+
+    function clean(value) {
+      return String(value || "").trim();
+    }
+
+    function startOfDay(date) {
+      return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    }
+
+    function escapeHtml(value) {
+      return String(value).replace(/[&<>"']/g, (char) => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;"
+      }[char]));
+    }
+
+    let toastTimer = 0;
+    function showToast(message) {
+      window.clearTimeout(toastTimer);
+      els.toast.textContent = message;
+      els.toast.classList.add("visible");
+      toastTimer = window.setTimeout(() => els.toast.classList.remove("visible"), 2800);
+    }
+
+    render();
+  </script>
+</body>
+</html>
