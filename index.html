@@ -566,7 +566,7 @@
       <aside class="hero-side card">
         <div>
           <p class="eyebrow">How it works</p>
-          <p class="muted">Stage 1 collects opt-ins. Stage 2 chooses the most popular day and meal time, then schedules one catchup per month using each person’s burger joint suggestion in rotation.</p>
+          <p class="muted">Stage 1 collects shared opt-ins. Stage 2 chooses the most popular day and meal time, then schedules one catchup per month using each person’s burger joint suggestion in rotation.</p>
         </div>
         <p class="small">Address lookup uses the free OpenStreetMap Nominatim search. You can also type an address manually if lookup is unavailable.</p>
       </aside>
@@ -583,6 +583,7 @@
           <p class="eyebrow">Stage 1</p>
           <h2>Opt in and suggest a burger joint</h2>
           <p class="muted">Each friend gets one current preference and one suggested venue. Re-enter the same name to update that person.</p>
+          <p id="syncStatus" class="small">Connecting to shared Burger Club data...</p>
 
           <div class="form-grid">
             <div class="field">
@@ -636,7 +637,7 @@
           <div class="actions">
             <button class="ghost-btn" id="exportBtn" type="button">Export club data</button>
             <button class="ghost-btn" id="importBtn" type="button">Import club data</button>
-            <button class="danger-btn" id="resetBtn" type="button">Reset all</button>
+            <button class="ghost-btn" id="refreshBtn" type="button">Refresh shared data</button>
             <input class="hidden-file" id="importFile" type="file" accept="application/json">
           </div>
         </section>
@@ -678,6 +679,8 @@
 
   <script>
     const STORAGE_KEY = "burgerClubPlanner.v1";
+    const SUPABASE_URL = "https://svgtpekdyanunabsavlp.supabase.co";
+    const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_2VLOGXFNctNanX592p7r-A_pTt33fOs";
     const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
     const state = {
       friends: loadFriends()
@@ -700,7 +703,8 @@
       exportBtn: document.querySelector("#exportBtn"),
       importBtn: document.querySelector("#importBtn"),
       importFile: document.querySelector("#importFile"),
-      resetBtn: document.querySelector("#resetBtn"),
+      refreshBtn: document.querySelector("#refreshBtn"),
+      syncStatus: document.querySelector("#syncStatus"),
       toast: document.querySelector("#toast"),
       statFriends: document.querySelector("#statFriends"),
       statVenue: document.querySelector("#statVenue"),
@@ -714,7 +718,7 @@
       button.addEventListener("click", () => setStage(button.dataset.stageTarget));
     });
 
-    els.optInForm.addEventListener("submit", (event) => {
+    els.optInForm.addEventListener("submit", async (event) => {
       event.preventDefault();
       const friend = {
         id: slugify(els.friendName.value),
@@ -732,18 +736,15 @@
         return;
       }
 
-      const existingIndex = state.friends.findIndex((item) => item.id === friend.id);
-      if (existingIndex >= 0) {
-        state.friends[existingIndex] = friend;
-        showToast(`${friend.name}'s opt-in was updated.`);
-      } else {
-        state.friends.push(friend);
-        showToast(`${friend.name} opted in.`);
+      try {
+        await upsertFriend(friend);
+        await loadSharedFriends();
+        clearForm();
+        showToast(`${friend.name}'s opt-in was saved.`);
+      } catch (error) {
+        console.error("Burger Club opt-in could not be saved.", error);
+        showToast(error.message);
       }
-
-      saveFriends();
-      clearForm();
-      render();
     });
 
     els.clearFormBtn.addEventListener("click", clearForm);
@@ -788,7 +789,7 @@
         if (!Array.isArray(payload.friends)) {
           throw new Error("Import file does not include a friends array.");
         }
-        state.friends = payload.friends
+        const importedFriends = payload.friends
           .filter((friend) => friend && friend.name && friend.joint && friend.address)
           .map((friend) => ({
             id: slugify(friend.name),
@@ -800,22 +801,25 @@
             notes: clean(friend.notes || ""),
             updatedAt: friend.updatedAt || new Date().toISOString()
           }));
-        saveFriends();
-        render();
-        showToast("Club data imported.");
+        await upsertFriends(importedFriends);
+        await loadSharedFriends();
+        showToast("Club data imported to the shared database.");
       } catch (error) {
+        console.error("Burger Club data could not be imported.", error);
         showToast(error.message);
       } finally {
         els.importFile.value = "";
       }
     });
 
-    els.resetBtn.addEventListener("click", () => {
-      if (!window.confirm("Reset all Burger Club opt-ins on this device?")) return;
-      state.friends = [];
-      saveFriends();
-      render();
-      showToast("Burger Club data reset.");
+    els.refreshBtn.addEventListener("click", async () => {
+      try {
+        await loadSharedFriends();
+        showToast("Shared data refreshed.");
+      } catch (error) {
+        console.error("Burger Club shared data could not be refreshed.", error);
+        showToast(error.message);
+      }
     });
 
     function setStage(stageName) {
@@ -983,6 +987,83 @@
       els.statDate.textContent = events[0] ? `${events[0].dayOfMonth} ${events[0].month}` : "TBD";
     }
 
+    async function loadSharedFriends() {
+      setSyncStatus("Syncing shared Burger Club data...");
+      const rows = await supabaseFetch("/rest/v1/opt_ins?select=*&order=updated_at.asc");
+      state.friends = rows.map(fromDbRow);
+      saveFriends();
+      render();
+      setSyncStatus(`Shared database connected. Last synced ${new Date().toLocaleTimeString()}.`);
+    }
+
+    async function upsertFriend(friend) {
+      const rows = await supabaseFetch("/rest/v1/opt_ins?on_conflict=friend_name", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Prefer": "resolution=merge-duplicates,return=representation"
+        },
+        body: JSON.stringify(toDbRow(friend))
+      });
+      return fromDbRow(rows[0]);
+    }
+
+    async function upsertFriends(friends) {
+      if (!friends.length) return [];
+      const rows = await supabaseFetch("/rest/v1/opt_ins?on_conflict=friend_name", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Prefer": "resolution=merge-duplicates,return=representation"
+        },
+        body: JSON.stringify(friends.map(toDbRow))
+      });
+      return rows.map(fromDbRow);
+    }
+
+    async function supabaseFetch(path, options = {}) {
+      const response = await fetch(`${SUPABASE_URL}${path}`, {
+        ...options,
+        headers: {
+          "apikey": SUPABASE_PUBLISHABLE_KEY,
+          "Authorization": `Bearer ${SUPABASE_PUBLISHABLE_KEY}`,
+          ...(options.headers || {})
+        }
+      });
+
+      if (!response.ok) {
+        const details = await response.text();
+        throw new Error(details || "Supabase request failed.");
+      }
+
+      if (response.status === 204) return [];
+      return response.json();
+    }
+
+    function toDbRow(friend) {
+      return {
+        friend_name: friend.name,
+        preferred_day: friend.day,
+        preferred_meal: friend.meal,
+        burger_joint: friend.joint,
+        address: friend.address,
+        notes: friend.notes || null
+      };
+    }
+
+    function fromDbRow(row) {
+      return {
+        id: slugify(row.friend_name),
+        name: row.friend_name,
+        day: row.preferred_day,
+        meal: row.preferred_meal,
+        joint: row.burger_joint,
+        address: row.address,
+        notes: row.notes || "",
+        updatedAt: row.updated_at || row.created_at || new Date().toISOString()
+      };
+    }
+
     function buildSchedule() {
       if (!state.friends.length) return [];
 
@@ -1109,7 +1190,16 @@
       toastTimer = window.setTimeout(() => els.toast.classList.remove("visible"), 2800);
     }
 
+    function setSyncStatus(message) {
+      els.syncStatus.textContent = message;
+    }
+
     render();
+    loadSharedFriends().catch((error) => {
+      console.error("Burger Club shared data could not be loaded.", error);
+      setSyncStatus("Shared database unavailable. Showing the last local backup from this browser.");
+      showToast(error.message);
+    });
   </script>
 </body>
 </html>
