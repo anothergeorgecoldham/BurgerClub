@@ -649,7 +649,7 @@
         <section class="panel card">
           <p class="eyebrow">Stage 2</p>
           <h2>Upcoming monthly catchups</h2>
-          <p class="muted">Dates are based on the most popular opted-in day and meal time. Venues rotate through the suggested burger joints.</p>
+          <p class="muted">Dates are based on the most popular opted-in day and meal time, choosing the matching weekday closest to the middle of each month. Venues rotate through the suggested burger joints.</p>
           <div id="scheduleList" class="list"></div>
         </section>
 
@@ -1076,7 +1076,7 @@
       let monthCursor = new Date(today.getFullYear(), today.getMonth(), 1);
 
       while (events.length < 6) {
-        const date = firstWeekdayOfMonth(monthCursor.getFullYear(), monthCursor.getMonth(), targetDay);
+        const date = middleWeekdayOfMonth(monthCursor.getFullYear(), monthCursor.getMonth(), targetDay);
         if (date >= today) {
           const venue = venues[events.length % venues.length];
           events.push({
@@ -1094,11 +1094,13 @@
       return events;
     }
 
-    function firstWeekdayOfMonth(year, month, targetDay) {
-      const date = new Date(year, month, 1);
-      const offset = (targetDay - date.getDay() + 7) % 7;
-      date.setDate(1 + offset);
-      return startOfDay(date);
+    function middleWeekdayOfMonth(year, month, targetDay) {
+      const middleDate = new Date(year, month, 15);
+      const daysAfter = (targetDay - middleDate.getDay() + 7) % 7;
+      const daysBefore = daysAfter === 0 ? 0 : daysAfter - 7;
+      const closestOffset = Math.abs(daysBefore) <= Math.abs(daysAfter) ? daysBefore : daysAfter;
+      middleDate.setDate(15 + closestOffset);
+      return startOfDay(middleDate);
     }
 
     function chooseMostCommon(values, tieBreaker) {

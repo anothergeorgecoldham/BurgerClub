@@ -17,7 +17,7 @@ Repository: <https://github.com/anothergeorgecoldham/BurgerClub>
   - one burger joint suggestion
   - address lookup via OpenStreetMap Nominatim, with manual address fallback
   - optional notes
-- The schedule view chooses the most popular day and meal time, then rotates through suggested venues for the next six monthly catchups.
+- The schedule view chooses the most popular day and meal time, schedules the matching weekday closest to the middle of each month, then rotates through suggested venues for the next six monthly catchups.
 - Data is shared through Supabase, so friends see the same opt-ins and schedule.
 - The app keeps a browser `localStorage` backup of the latest shared data for graceful fallback if Supabase is temporarily unavailable.
 - Export/import buttons are still available for manual backup or bulk restore.
