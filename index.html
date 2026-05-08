@@ -73,9 +73,39 @@
     body {
       margin: 0;
       min-height: 100vh;
-      background: var(--cp-bg);
+      background:
+        radial-gradient(circle at top left, var(--cp-highlight), var(--cp-bg) 28%),
+        radial-gradient(circle at bottom right, var(--cp-accent-soft), var(--cp-bg) 30%),
+        var(--cp-bg);
       color: var(--cp-text);
       font-family: "Segoe UI", Aptos, Calibri, -apple-system, BlinkMacSystemFont, sans-serif;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background:
+        repeating-conic-gradient(from 18deg at 72% 8%, var(--cp-highlight) 0 8deg, var(--cp-bg) 8deg 16deg);
+      opacity: 0.34;
+      pointer-events: none;
+      z-index: -2;
+    }
+
+    body::after {
+      content: "🍔  🥤  🍟  ✨  🍔  🥤  🍟  ✨";
+      position: fixed;
+      left: -24px;
+      right: -24px;
+      bottom: 14px;
+      color: var(--cp-text-soft);
+      font-size: clamp(1.4rem, 3vw, 2.5rem);
+      letter-spacing: 0.6em;
+      opacity: 0.18;
+      pointer-events: none;
+      white-space: nowrap;
+      z-index: -1;
     }
 
     button,
@@ -89,6 +119,37 @@
       width: min(1180px, calc(100% - 32px));
       margin: 0 auto;
       padding: 32px 0;
+      position: relative;
+    }
+
+    .shell::before,
+    .shell::after {
+      position: absolute;
+      display: grid;
+      width: 84px;
+      height: 84px;
+      place-items: center;
+      background: var(--cp-panel);
+      border: 1px solid var(--cp-border);
+      border-radius: 999px;
+      box-shadow: var(--cp-shadow);
+      font-size: 2.4rem;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .shell::before {
+      content: "🍔";
+      top: 14px;
+      right: -20px;
+      transform: rotate(9deg);
+    }
+
+    .shell::after {
+      content: "🥤";
+      top: 124px;
+      left: -30px;
+      transform: rotate(-8deg);
     }
 
     .hero {
@@ -97,10 +158,12 @@
       gap: 20px;
       align-items: stretch;
       margin-bottom: 20px;
+      position: relative;
+      z-index: 1;
     }
 
     .card {
-      background: var(--cp-surface);
+      background: var(--cp-panel-strong);
       border: 1px solid var(--cp-border);
       border-radius: 16px;
       box-shadow: 0 0 2px var(--cp-border), 0 1px 2px var(--cp-border);
@@ -110,6 +173,30 @@
     .hero-side,
     .panel {
       padding: 24px;
+    }
+
+    .hero-main {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-main::before {
+      content: "";
+      position: absolute;
+      inset: -80px -120px auto auto;
+      width: 320px;
+      height: 320px;
+      background:
+        repeating-conic-gradient(from -18deg, var(--cp-accent-soft) 0 12deg, var(--cp-surface) 12deg 24deg);
+      border: 1px solid var(--cp-border);
+      border-radius: 999px;
+      opacity: 0.78;
+      z-index: 0;
+    }
+
+    .hero-main > * {
+      position: relative;
+      z-index: 1;
     }
 
     .eyebrow {
@@ -124,6 +211,11 @@
       text-transform: uppercase;
     }
 
+    .eyebrow::before {
+      content: "★";
+      color: var(--cp-warning);
+    }
+
     h1,
     h2,
     h3,
@@ -136,6 +228,20 @@
       font-size: clamp(2.1rem, 4vw, 4.2rem);
       line-height: 0.96;
       letter-spacing: -0.06em;
+      max-width: 780px;
+    }
+
+    .title-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 14px;
+      padding: 8px 12px;
+      background: var(--cp-accent-soft);
+      color: var(--cp-text);
+      border: 1px solid var(--cp-border);
+      border-radius: 999px;
+      font-weight: 800;
     }
 
     h2 {
@@ -169,7 +275,7 @@
 
     .stat {
       padding: 14px;
-      background: var(--cp-surface-soft);
+      background: var(--cp-surface);
       border: 1px solid var(--cp-border);
       border-radius: 0.625rem;
     }
@@ -190,7 +296,79 @@
       flex-direction: column;
       justify-content: space-between;
       gap: 16px;
-      background: var(--cp-accent-soft);
+      background:
+        linear-gradient(135deg, var(--cp-accent-soft), var(--cp-panel-strong)),
+        var(--cp-surface);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .burger-scene {
+      display: grid;
+      gap: 12px;
+      padding: 18px;
+      background: var(--cp-surface);
+      border: 1px solid var(--cp-border);
+      border-radius: 16px;
+      text-align: center;
+    }
+
+    .burger-art {
+      display: grid;
+      gap: 2px;
+      justify-items: center;
+      filter: drop-shadow(0 6px 0 var(--cp-accent-soft));
+    }
+
+    .burger-line {
+      display: block;
+      width: min(210px, 100%);
+      height: 24px;
+      border: 1px solid var(--cp-border);
+    }
+
+    .bun-top {
+      height: 52px;
+      background: var(--cp-warning);
+      border-radius: 999px 999px 24px 24px;
+    }
+
+    .cheese {
+      background: var(--cp-accent);
+      border-radius: 0.625rem;
+      clip-path: polygon(0 0, 100% 0, 100% 62%, 76% 62%, 68% 100%, 56% 62%, 38% 62%, 29% 100%, 20% 62%, 0 62%);
+    }
+
+    .patty {
+      background: var(--cp-text-muted);
+      border-radius: 999px;
+    }
+
+    .bun-bottom {
+      height: 36px;
+      background: var(--cp-warning);
+      border-radius: 20px 20px 999px 999px;
+    }
+
+    .scene-caption {
+      margin: 0;
+      color: var(--cp-text-muted);
+      font-size: 0.92rem;
+      font-weight: 700;
+    }
+
+    .soda-pop {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 8px 12px;
+      background: var(--cp-accent);
+      color: var(--cp-accent-fg);
+      border: 1px solid var(--cp-border);
+      border-radius: 999px;
+      font-weight: 800;
+      transform: rotate(-2deg);
     }
 
     .stage-nav {
@@ -198,7 +376,7 @@
       grid-template-columns: repeat(2, 1fr);
       gap: 8px;
       padding: 8px;
-      background: var(--cp-surface);
+      background: var(--cp-panel-strong);
       border: 1px solid var(--cp-border);
       border-radius: 16px;
       margin-bottom: 20px;
@@ -258,6 +436,8 @@
       grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
       gap: 20px;
       align-items: start;
+      position: relative;
+      z-index: 1;
     }
 
     .stage {
@@ -285,9 +465,9 @@
     }
 
     label {
-      color: var(--cp-text-muted);
+      color: var(--cp-text);
       font-size: 0.9rem;
-      font-weight: 700;
+      font-weight: 800;
     }
 
     input,
@@ -295,7 +475,7 @@
     textarea {
       width: 100%;
       padding: 11px 12px;
-      background: var(--cp-surface);
+      background: var(--cp-panel-strong);
       color: var(--cp-text);
       border: 1px solid var(--cp-border);
       border-radius: 0.625rem;
@@ -374,9 +554,25 @@
     .empty,
     .summary-row {
       padding: 16px;
-      background: var(--cp-surface-soft);
+      background: var(--cp-surface);
       border: 1px solid var(--cp-border);
       border-radius: 0.625rem;
+    }
+
+    .friend,
+    .event {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .friend::before,
+    .event::before {
+      content: "🍔";
+      position: absolute;
+      right: 12px;
+      bottom: 8px;
+      font-size: 2rem;
+      opacity: 0.12;
     }
 
     .friend-head,
@@ -405,7 +601,7 @@
       border: 1px solid var(--cp-border);
       border-radius: 999px;
       font-size: 0.86rem;
-      font-weight: 700;
+      font-weight: 800;
     }
 
     .address {
@@ -422,7 +618,7 @@
     .date-chip {
       min-width: 72px;
       padding: 10px;
-      background: var(--cp-surface);
+      background: var(--cp-accent-soft);
       border: 1px solid var(--cp-border);
       border-radius: 0.625rem;
       text-align: center;
@@ -474,7 +670,7 @@
 
     th {
       color: var(--cp-text-muted);
-      background: var(--cp-surface-soft);
+      background: var(--cp-accent-soft);
       font-size: 0.85rem;
       letter-spacing: 0.04em;
       text-transform: uppercase;
@@ -546,8 +742,9 @@
     <section class="hero">
       <div class="hero-main card">
         <p class="eyebrow">Burger Club</p>
-        <h1>Plan the monthly burger catchup without the group-chat chaos.</h1>
-        <p class="lede">Friends opt in with their preferred day, meal time, and one burger joint. The planner turns everyone’s preferences into upcoming monthly catchups and rotates through suggested venues.</p>
+        <div class="title-badge">月刊バーガー部 · Cheeseburger catchups</div>
+        <h1>Stack the crew, pick the burger, sip the soda.</h1>
+        <p class="lede">Friends opt in with their preferred day, meal time, and one burger joint. The planner turns everyone’s cravings into monthly burger episodes with rotating venues.</p>
         <div class="stats" aria-label="Burger club summary">
           <div class="stat">
             <strong id="statFriends">0</strong>
@@ -567,6 +764,16 @@
         <div>
           <p class="eyebrow">How it works</p>
           <p class="muted">Stage 1 collects shared opt-ins. Stage 2 chooses the most popular day and meal time, then schedules one catchup per month using each person’s burger joint suggestion in rotation.</p>
+        </div>
+        <div class="burger-scene" aria-hidden="true">
+          <div class="burger-art">
+            <span class="burger-line bun-top"></span>
+            <span class="burger-line cheese"></span>
+            <span class="burger-line patty"></span>
+            <span class="burger-line bun-bottom"></span>
+          </div>
+          <p class="scene-caption">Episode theme: burgers, fries, soda, friendship.</p>
+          <span class="soda-pop">🥤 Soda side quest</span>
         </div>
         <p class="small">Address lookup uses the free OpenStreetMap Nominatim search. You can also type an address manually if lookup is unavailable.</p>
       </aside>
